@@ -126,6 +126,7 @@ class TouchRippleDoubleTapGestureRecognizer
   Timer? _doubleTappableTimer;
   Timer? _doubleTapHoldTimer;
 
+  int? _pointerId;
   int _tapCount = 0;
 
   int get _doubleTapCount => _tapCount == 0 ? 0 : _tapCount - 1;
@@ -148,6 +149,19 @@ class TouchRippleDoubleTapGestureRecognizer
     super.onPointerDown(event);
     super.hold();
 
+    if (_pointerId != null) {
+      // detected multiple pointers -> stop detection
+      if (_doubleTapCount > 0) {
+        onContinueEnd();
+      }
+      _doubleTappableTimer?.cancel();
+      _doubleTapHoldTimer?.cancel();
+      super.reject();
+      super.releaseAll();
+      return;
+    }
+
+    _pointerId = event.pointer;
     _tapCount++;
 
     assert(doubleTappableDuration != null,
@@ -156,7 +170,8 @@ class TouchRippleDoubleTapGestureRecognizer
         'The [_doubleTapHoldTimer] must be initialised before the [doubleTapHoldDuration] can be Initialised.');
     if (_doubleTapCount == 1) onContinueStart();
     if (_doubleTapCount > 0) {
-      final isContinueable = onDoubleTap?.call(currentPointerOffset, _doubleTapCount);
+      final isContinueable =
+          onDoubleTap?.call(currentPointerOffset, _doubleTapCount);
 
       accept();
       if (isContinueable ?? false) {
@@ -177,6 +192,11 @@ class TouchRippleDoubleTapGestureRecognizer
         super.releaseAll();
       });
     }
+  }
+
+  @override
+  void onPointerUp(PointerUpEvent event) {
+    _pointerId = null;
   }
 
   @override
@@ -297,7 +317,8 @@ class TouchRippleLongTapGestureRecognizer
     super.onPointerDown(event);
 
     _longTapStartDeleyTimer?.cancel();
-    _longTapStartDeleyTimer = Timer(longTapStartDeleyDuration!, startLongTappable);
+    _longTapStartDeleyTimer =
+        Timer(longTapStartDeleyDuration!, startLongTappable);
   }
 
   @override
