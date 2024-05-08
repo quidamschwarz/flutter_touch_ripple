@@ -202,7 +202,7 @@ class TouchRippleDoubleTapGestureRecognizer
   @override
   void reset() {
     super.reset();
-
+    _pointerId = null;
     _tapCount = 0;
     _doubleTappableTimer?.cancel();
     _doubleTappableTimer = null;
